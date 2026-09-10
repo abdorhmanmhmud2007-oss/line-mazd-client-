@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Line Mazd - لاين مزد للشحن الإلكتروني</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding-bottom: 50px;
+        }
+
+        /* الهيدر وشريط التنقل */
+        header {
+            background-color: #1e293b;
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #3b82f6;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #38bdf8;
+            letter-spacing: 1px;
+        }
+
+        .user-balance {
+            background-color: #334155;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #4ade80;
+            border: 1px solid #4ade80;
+        }
+
+        /* البانر الرئيسي */
+        .hero {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        .hero h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+
+        .hero p {
+            color: #94a3b8;
+            font-size: 15px;
+        }
+
+        /* شبكة الألعاب والبطاقات */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            border-right: 4px solid #3b82f6;
+            padding-right: 10px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: #1e293b;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #334155;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 140px;
+            background-color: #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+
+        .card-body {
+            padding: 15px;
+            text-align: center;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .card-price {
+            color: #38bdf8;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .btn-buy {
+            width: 100%;
+            padding: 10px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-buy:hover {
+            background-color: #1d4ed8;
+        }
+
+        /* فوتر */
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #64748b;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">LINE MAZD</div>
+        <div class="user-balance">الرصيد: 0.00 د.ل</div>
+    </header>
+
+    <section class="hero">
+        <h1>متجر Line Mazd لشحن الكروت والألعاب</h1>
+        <p>تسليم فوري وسريع لجميع خدماتك المفضلّة في ليبيا</p>
+    </section>
+
+    <div class="container">
+        <h2 class="section-title">الألعاب والبطاقات المتاحة</h2>
+        
+        <div class="cards-grid">
+            <!-- كرت ببجي -->
+            <div class="card">
+                <div class="card-img">🎮</div>
+                <div class="card-body">
+                    <div class="card-title">PUBG Mobile (60 UC)</div>
+                    <div class="card-price">5.00 د.ل</div>
+                    <button class="btn-buy" onclick="alert('سيتم ربطه بنظام الشحن قريباً!')">شراء الآن</button>
+                </div>
+            </div>
+
+            <!-- كرت فري فاير -->
+            <div class="card">
+                <div class="card-img">🔥</div>
+                <div class="card-body">
+                    <div class="card-title">Free Fire (100 Diamonds)</div>
+                    <div class="card-price">6.50 د.ل</div>
+                    <button class="btn-buy" onclick="alert('سيتم ربطه بنظام الشحن قريباً!')">شراء الآن</button>
+                </div>
+            </div>
+
+            <!-- كرت ليبيانا -->
+            <div class="card">
+                <div class="card-img">📱</div>
+                <div class="card-body">
+                    <div class="card-title">كرت ليبيانا 10 دينار</div>
+                    <div class="card-price">10.00 د.ل</div>
+                    <button class="btn-buy" onclick="alert('سيتم ربطه بنظام الشحن قريباً!')">شراء الآن</button>
+                </div>
+            </div>
+
+            <!-- كرت المدار -->
+            <div class="card">
+                <div class="card-img">📡</div>
+                <div class="card-body">
+                    <div class="card-title">كرت مدار 10 دينار</div>
+                    <div class="card-price">10.00 د.ل</div>
+                    <button class="btn-buy" onclick="alert('سيتم ربطه بنظام الشحن قريباً!')">شراء الآن</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        جميع الحقوق محفوظة © Line Mazd 2026
+    </footer>
+
+</body>
+</html>
