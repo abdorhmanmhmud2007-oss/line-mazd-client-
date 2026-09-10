@@ -1,304 +1,168 @@
-import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>خط المجد لشحن الألعاب</title>
+  <!-- مكتبة React و Supabase مباشرة -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { margin: 0; background-color: #0f172a; color: #fff; font-family: system-ui, -apple-system, sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
 
-// اتصال Supabase
-const supabaseUrl = 'https://alphhjktqdoubsaxjrgm.supabase.co';
-const supabaseKey = 'YOUR_SUPABASE_ANON_KEY'; // تأكد من استبدال المفتاح إن كان معرفاً في ملف .env
-const supabase = createClient(supabaseUrl, supabaseKey);
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const { createClient } = supabase;
 
-export default function App() {
-  const [products, setProducts] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('transfer'); // transfer or card
-  
-  // بيانات النموذج
-  const [playerId, setPlayerId] = useState('');
-  const [senderPhone, setSenderPhone] = useState('');
-  const [receiptImage, setReceiptImage] = useState(null);
-  const [cardCode, setCardCode] = useState('');
-  const [cardCount, setCardCount] = useState(1);
+    const supabaseUrl = 'https://alphhjktqdoubsaxjrgm.supabase.co';
+    const supabaseKey = 'YOUR_SUPABASE_ANON_KEY'; // اتركها أو ضع المفتاح إن وجد
+    const db = createClient(supabaseUrl, supabaseKey);
 
-  // نظام البلاغات
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [reportPhone, setReportPhone] = useState('');
-  const [reportMessage, setReportMessage] = useState('');
+    function App() {
+      const [products, setProducts] = useState([]);
+      const [selectedProduct, setSelectedProduct] = useState(null);
+      const [paymentMethod, setPaymentMethod] = useState('transfer');
+      const [playerId, setPlayerId] = useState('');
+      const [senderPhone, setSenderPhone] = useState('');
+      const [cardCode, setCardCode] = useState('');
+      const [cardCount, setCardCount] = useState(1);
+      const [showReport, setShowReport] = useState(false);
+      const [reportPhone, setReportPhone] = useState('');
+      const [reportMsg, setReportMsg] = useState('');
+      const [loading, setLoading] = useState(false);
 
-  const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState('');
+      useEffect(() => {
+        db.from('products').select('*').then(({ data, error }) => {
+          if (!error && data) setProducts(data);
+        });
+      }, []);
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+      async function handleOrder(e) {
+        e.preventDefault();
+        setLoading(true);
+        let order = {
+          product_name: selectedProduct.name,
+          price: selectedProduct.price,
+          player_id: playerId,
+          payment_method: paymentMethod === 'transfer' ? 'تحويل رصيد' : 'كروت شحن',
+          status: 'pending'
+        };
+        if (paymentMethod === 'transfer') order.sender_phone = senderPhone;
+        else { order.card_code = cardCode; order.card_count = cardCount; }
 
-  async function fetchProducts() {
-    const { data, error } = await supabase.from('products').select('*');
-    if (!error && data) setProducts(data);
-  }
-
-  async function handleOrderSubmit(e) {
-    e.preventDefault();
-    if (!playerId) return alert('يرجى إدخال Player ID الخاص بالحساب');
-
-    setLoading(true);
-    let orderDetails = {
-      product_name: selectedProduct.name,
-      price: selectedProduct.price,
-      player_id: playerId,
-      payment_method: paymentMethod === 'transfer' ? 'تحويل رصيد ليبيانا' : 'كتابة كروت',
-      status: 'pending'
-    };
-
-    if (paymentMethod === 'transfer') {
-      if (!senderPhone) {
+        const { error } = await db.from('orders').insert([order]);
         setLoading(false);
-        return alert('يرجى إدخال الرقم الذي حولت منه الرصيد');
-      }
-      orderDetails.sender_phone = senderPhone;
-      // إذا تم رفع صورة
-      if (receiptImage) {
-        const fileExt = receiptImage.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const { data: uploadData, error: uploadErr } = await supabase.storage
-          .from('receipts')
-          .upload(fileName, receiptImage);
-        if (!uploadErr) {
-          orderDetails.receipt_url = fileName;
+        if (error) alert('حدث خطأ أثناء إرسال الطلب');
+        else {
+          alert('تم إرسال طلبك بنجاح!');
+          setSelectedProduct(null);
         }
       }
-    } else {
-      if (!cardCode) {
+
+      async function handleReport(e) {
+        e.preventDefault();
+        setLoading(true);
+        const { error } = await db.from('reports').insert([{ user_phone: reportPhone, message: reportMsg }]);
         setLoading(false);
-        return alert('يرجى كتابة أرقام كرت ليبيانا');
+        if (error) alert('حدث خطأ أثناء إرسال البلاغ');
+        else {
+          alert('تم إرسال البلاغ للإدارة بنجاح');
+          setShowReport(false);
+        }
       }
-      orderDetails.card_code = cardCode;
-      orderDetails.card_count = cardCount;
-    }
 
-    const { error } = await supabase.from('orders').insert([orderDetails]);
-    setLoading(false);
-
-    if (error) {
-      alert('حدث خطأ أثناء إرسال الطلب، حاول ثانية');
-    } else {
-      alert('تم إرسال طلبك بنجاح! سيتم التنفيذ قريباً.');
-      setSelectedProduct(null);
-      resetForm();
-    }
-  }
-
-  async function handleReportSubmit(e) {
-    e.preventDefault();
-    if (!reportMessage) return alert('يرجى كتابة تفاصيل البلاغ');
-
-    setLoading(true);
-    const { error } = await supabase.from('reports').insert([
-      { user_phone: reportPhone, message: reportMessage }
-    ]);
-    setLoading(false);
-
-    if (error) {
-      alert('حدث خطأ أثناء إرسال البلاغ');
-    } else {
-      alert('تم إرسال البلاغ للإدارة بنجاح');
-      setShowReportModal(false);
-      setReportPhone('');
-      setReportMessage('');
-    }
-  }
-
-  function resetForm() {
-    setPlayerId('');
-    setSenderPhone('');
-    setReceiptImage(null);
-    setCardCode('');
-    setCardCount(1);
-  }
-
-  return (
-    <div style={{ backgroundColor: '#0f172a', color: '#fff', minHeight: '100vh', padding: '15px', fontFamily: 'sans-serif', direction: 'rtl' }}>
-      
-      {/* الترويسة العلوية مع زر الواتساب */}
-      <div style={{ display: 'flex', justifyContent: 'space-[#0f172a]', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1e293b', paddingBottom: '15px', marginBottom: '20px' }}>
-        <h2 style={{ margin: 0, fontSize: '20px' }}>خط المجد لشحن الألعاب</h2>
-        <a 
-          href="https://wa.me/218913147002" 
-          target="_blank" 
-          rel="noreferrer" 
-          style={{ backgroundColor: '#25D366', color: '#fff', padding: '8px 14px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px' }}
-        >
-          📱 واتساب الدعم
-        </a>
-      </div>
-
-      {/* قائمة المنتجات */}
-      <h3 style={{ borderRight: '4px solid #3b82f6', paddingRight: '10px' }}>الألعاب والبطاقات المتاحة</h3>
-      
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px', marginTop: '15px' }}>
-        {products.map((p) => (
-          <div key={p.id} style={{ backgroundColor: '#1e293b', padding: '12px', borderRadius: '10px', textAlign: 'center', border: '1px solid #334155' }}>
-            <h4 style={{ margin: '5px 0', fontSize: '15px' }}>{p.name}</h4>
-            <p style={{ color: '#38bdf8', fontWeight: 'bold', margin: '5px 0' }}>
-              {p.in_stock ? `${p.price} د.ل` : 'قريباً'}
-            </p>
-            {p.in_stock ? (
-              <button 
-                onClick={() => { setSelectedProduct(p); resetForm(); }}
-                style={{ backgroundColor: '#2563eb', color: '#fff', border: 'none', width: '100%', padding: '8px', borderRadius: '6px', cursor: 'pointer', marginTop: '5px', fontWeight: 'bold' }}
-              >
-                شحن الآن
-              </button>
-            ) : (
-              <span style={{ color: '#94a3b8', fontSize: '12px' }}>غير متاح حالياً</span>
-            )}
+      return (
+        <div style={{ padding: '15px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '15px' }}>
+            <h2 style={{ margin: 0, fontSize: '18px' }}>خط المجد لشحن الألعاب</h2>
+            <a href="https://wa.me/218913147002" target="_blank" style={{ backgroundColor: '#25D366', color: '#fff', padding: '8px 12px', borderRadius: '6px', textDecoration: 'none', fontWeight: 'bold', fontSize: '13px' }}>
+              📱 واتساب الدعم
+            </a>
           </div>
-        ))}
-      </div>
 
-      {/* زر تقديم بلاغ أسفل الصفحة */}
-      <div style={{ marginTop: '40px', textAlign: 'center' }}>
-        <button 
-          onClick={() => setShowReportModal(true)}
-          style={{ backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-        >
-          ⚠️ تقديم بلاغ / شكوى
-        </button>
-      </div>
+          <h3>العروض المتاحة</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
+            {products.map(p => (
+              <div key={p.id} style={{ backgroundColor: '#1e293b', padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
+                <h4 style={{ margin: '5px 0' }}>{p.name}</h4>
+                <p style={{ color: '#38bdf8', margin: '5px 0', fontWeight: 'bold' }}>{p.in_stock ? `${p.price} د.ل` : 'قريباً'}</p>
+                {p.in_stock && (
+                  <button onClick={() => setSelectedProduct(p)} style={{ backgroundColor: '#2563eb', color: '#fff', border: 'none', width: '100%', padding: '6px', borderRadius: '4px', cursor: 'pointer' }}>
+                    شحن الآن
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
 
-      {/* نافذة الشحن اليدوي عند اختيار منتج */}
-      {selectedProduct && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '15px', zIndex: 1000 }}>
-          <div style={{ backgroundColor: '#1e293b', width: '100%', maxWidth: '420px', padding: '20px', borderRadius: '12px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h3 style={{ marginTop: 0 }}>شحن: {selectedProduct.name}</h3>
-            <p style={{ color: '#38bdf8' }}>السعر: {selectedProduct.price} د.ل</p>
+          <div style={{ marginTop: '30px', textAlign: 'center' }}>
+            <button onClick={() => setShowReport(true)} style={{ backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px' }}>
+              ⚠️ تقديم بلاغ / شكوى
+            </button>
+          </div>
 
-            <form onSubmit={handleOrderSubmit}>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>Player ID (معرف اللاعب):</label>
-              <input 
-                type="text" 
-                required
-                value={playerId} 
-                onChange={(e) => setPlayerId(e.target.value)}
-                placeholder="أدخل الآيدي هنا" 
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', marginBottom: '15px', boxSizing: 'border-box' }}
-              />
+          {selectedProduct && (
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '15px' }}>
+              <div style={{ backgroundColor: '#1e293b', padding: '20px', borderRadius: '10px', width: '100%', maxWidth: '350px' }}>
+                <h3>شحن: {selectedProduct.name}</h3>
+                <form onSubmit={handleOrder}>
+                  <label>Player ID:</label>
+                  <input required value={playerId} onChange={e => setPlayerId(e.target.value)} style={{ width: '100%', padding: '8px', margin: '5px 0 10px', boxSizing: 'border-box' }} />
+                  <label>طريقة الدفع:</label>
+                  <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} style={{ width: '100%', padding: '8px', margin: '5px 0 10px', boxSizing: 'border-box' }}>
+                    <option value="transfer">تحويل رصيد (0944235295)</option>
+                    <option value="card">كتابة كروت</option>
+                  </select>
 
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>طريقة الدفع:</label>
-              <select 
-                value={paymentMethod} 
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', marginBottom: '15px', boxSizing: 'border-box' }}
-              >
-                <option value="transfer">تحويل رصيد ليبيانا (0944235295)</option>
-                <option value="card">كتابة كرت ليبيانا</option>
-              </select>
+                  {paymentMethod === 'transfer' ? (
+                    <div>
+                      <label>رقمك المحول منه:</label>
+                      <input required value={senderPhone} onChange={e => setSenderPhone(e.target.value)} style={{ width: '100%', padding: '8px', margin: '5px 0 10px', boxSizing: 'border-box' }} />
+                    </div>
+                  ) : (
+                    <div>
+                      <label>أرقام الكرت:</label>
+                      <textarea required value={cardCode} onChange={e => setCardCode(e.target.value)} style={{ width: '100%', padding: '8px', margin: '5px 0 10px', boxSizing: 'border-box' }} />
+                    </div>
+                  )}
 
-              {paymentMethod === 'transfer' ? (
-                <div>
-                  <div style={{ backgroundColor: '#0f172a', padding: '10px', borderRadius: '6px', color: '#f59e0b', fontSize: '13px', marginBottom: '15px' }}>
-                    📌 يرجى تحويل الرصيد إلى الرقم: <strong>0944235295</strong> ثم إدخال رقمك وإرفاق صورة الإثبات.
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                    <button type="submit" disabled={loading} style={{ flex: 1, backgroundColor: '#16a34a', color: '#fff', border: 'none', padding: '8px', borderRadius: '4px' }}>تأكيد</button>
+                    <button type="button" onClick={() => setSelectedProduct(null)} style={{ backgroundColor: '#64748b', color: '#fff', border: 'none', padding: '8px', borderRadius: '4px' }}>إلغاء</button>
                   </div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>الرقم الذي حولت منه:</label>
-                  <input 
-                    type="text" 
-                    required
-                    value={senderPhone} 
-                    onChange={(e) => setSenderPhone(e.target.value)}
-                    placeholder="09XXXXXXXX" 
-                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', marginBottom: '15px', boxSizing: 'border-box' }}
-                  />
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>صورة إثبات التحويل (اختياري):</label>
-                  <input 
-                    type="file" 
-                    accept="image/*"
-                    onChange={(e) => setReceiptImage(e.target.files[0])}
-                    style={{ width: '100%', marginBottom: '15px' }}
-                  />
-                </div>
-              ) : (
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>أرقام الكرت / الكروت:</label>
-                  <textarea 
-                    required
-                    value={cardCode} 
-                    onChange={(e) => setCardCode(e.target.value)}
-                    placeholder="اكتب أرقام كرت الشحن هنا" 
-                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', marginBottom: '15px', boxSizing: 'border-box', height: '60px' }}
-                  />
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>عدد الكروت:</label>
-                  <input 
-                    type="number" 
-                    min="1"
-                    value={cardCount} 
-                    onChange={(e) => setCardCount(e.target.value)}
-                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', marginBottom: '15px', boxSizing: 'border-box' }}
-                  />
-                </div>
-              )}
-
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                <button 
-                  type="submit" 
-                  disabled={loading}
-                  style={{ flex: 1, backgroundColor: '#16a34a', color: '#fff', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
-                >
-                  {loading ? 'جاري إرسال الطلب...' : 'تأكيد الشحن'}
-                </button>
-                <button 
-                  type="button" 
-                  onClick={() => setSelectedProduct(null)}
-                  style={{ backgroundColor: '#64748b', color: '#fff', border: 'none', padding: '10px 15px', borderRadius: '6px', cursor: 'pointer' }}
-                >
-                  إلغاء
-                </button>
+                </form>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </div>
+          )}
 
-      {/* نافذة الشكاوى والبلاغات */}
-      {showReportModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '15px', zIndex: 1000 }}>
-          <div style={{ backgroundColor: '#1e293b', width: '100%', maxWidth: '400px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ marginTop: 0, color: '#ef4444' }}>تقديم بلاغ أو مشكلة</h3>
-            <form onSubmit={handleReportSubmit}>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>رقم هاتفك (للتواصل معك):</label>
-              <input 
-                type="text" 
-                value={reportPhone} 
-                onChange={(e) => setReportPhone(e.target.value)}
-                placeholder="09XXXXXXXX" 
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', marginBottom: '15px', boxSizing: 'border-box' }}
-              />
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>تفاصيل الشكوى / البلاغ:</label>
-              <textarea 
-                required
-                value={reportMessage} 
-                onChange={(e) => setReportMessage(e.target.value)}
-                placeholder="اكتب المشكلة التي واجهتك بالتفصيل..." 
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', marginBottom: '15px', boxSizing: 'border-box', height: '80px' }}
-              />
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button 
-                  type="submit" 
-                  disabled={loading}
-                  style={{ flex: 1, backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
-                >
-                  {loading ? 'جاري الإرسال...' : 'إرسال البلاغ'}
-                </button>
-                <button 
-                  type="button" 
-                  onClick={() => setShowReportModal(false)}
-                  style={{ backgroundColor: '#64748b', color: '#fff', border: 'none', padding: '10px 15px', borderRadius: '6px', cursor: 'pointer' }}
-                >
-                  إلغاء
-                </button>
+          {showReport && (
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '15px' }}>
+              <div style={{ backgroundColor: '#1e293b', padding: '20px', borderRadius: '10px', width: '100%', maxWidth: '350px' }}>
+                <h3 style={{ color: '#ef4444' }}>تقديم بلاغ</h3>
+                <form onSubmit={handleReport}>
+                  <label>رقم الهاتف:</label>
+                  <input value={reportPhone} onChange={e => setReportPhone(e.target.value)} style={{ width: '100%', padding: '8px', margin: '5px 0 10px', boxSizing: 'border-box' }} />
+                  <label>التفاصيل:</label>
+                  <textarea required value={reportMsg} onChange={e => setReportMsg(e.target.value)} style={{ width: '100%', padding: '8px', margin: '5px 0 10px', boxSizing: 'border-box' }} />
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button type="submit" disabled={loading} style={{ flex: 1, backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '8px', borderRadius: '4px' }}>إرسال</button>
+                    <button type="button" onClick={() => setShowReport(false)} style={{ backgroundColor: '#64748b', color: '#fff', border: 'none', padding: '8px', borderRadius: '4px' }}>إلغاء</button>
+                  </div>
+                </form>
               </div>
-            </form>
-          </div>
+            </div>
+          )}
         </div>
-      )}
+      );
+    }
 
-    </div>
-  );
-}
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
