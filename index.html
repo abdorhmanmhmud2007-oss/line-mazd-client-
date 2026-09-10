@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>متجر شحن الألعاب</title>
+  <title>متجر المجد للشحن السريع</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --bg: #0f172a;
       --card: #1e293b;
       --accent: #10b981;
+      --accent-hover: #059669;
       --text: #f8fafc;
       --subtext: #94a3b8;
     }
@@ -22,75 +23,83 @@
       direction: rtl;
     }
     .container { max-width: 500px; margin: 0 auto; }
-    h1, h2 { text-align: center; margin-bottom: 20px; }
     
-    /* قسم الاستعلام عن حالة الطلب */
-    .status-box {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 12px;
-      padding: 15px;
+    header { text-align: center; margin-bottom: 25px; margin-top: 10px; }
+    header h1 { margin: 0; font-size: 24px; color: #fff; }
+    
+    /* قسم متابعة حالة الطلب بتصميم أنيق */
+    .track-section {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 16px;
       margin-bottom: 25px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
-    .status-box input {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #475569;
+    .track-section h3 { margin: 0 0 12px 0; font-size: 16px; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
+    .track-input-group { display: flex; gap: 8px; }
+    .track-input-group input {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #334155;
       background: #0f172a;
-      color: #fff;
-      box-sizing: border-box;
-      margin-bottom: 10px;
+      color: white;
+      font-size: 14px;
+      outline: none;
     }
-    .search-btn {
-      width: 100%;
-      padding: 10px;
+    .track-btn {
       background: #3b82f6;
-      color: #fff;
+      color: white;
       border: none;
-      border-radius: 8px;
+      padding: 0 16px;
+      border-radius: 10px;
       font-weight: bold;
       cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
     }
+    
+    /* نتائج البحث */
     .result-card {
-      margin-top: 15px;
+      margin-top: 12px;
       padding: 12px;
       background: #0f172a;
-      border-radius: 8px;
+      border-radius: 10px;
       border-right: 4px solid #3b82f6;
+      font-size: 14px;
     }
-    .badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: bold;
-    }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
     .status-pending { background: #f59e0b; color: #000; }
     .status-completed { background: #10b981; color: #fff; }
     .status-rejected { background: #ef4444; color: #fff; }
 
+    /* عنوان الألعاب */
+    .section-title { font-size: 18px; margin-bottom: 15px; color: var(--text); }
+
     /* شبكة المنتجات */
-    .products { display: grid; gap: 15px; }
+    .products { display: flex; flex-direction: column; gap: 12px; }
     .product-card {
       background: var(--card);
-      border-radius: 12px;
-      padding: 15px;
+      border-radius: 16px;
+      padding: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
+    .product-info h3 { margin: 0 0 4px 0; font-size: 16px; }
+    .product-info p { margin: 0; color: var(--subtext); font-size: 14px; }
     .btn {
       background: var(--accent);
       color: white;
       border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
+      padding: 10px 20px;
+      border-radius: 10px;
       cursor: pointer;
       font-weight: bold;
+      font-size: 14px;
     }
 
-    /* النافذة المنبثقة للطلب */
+    /* النافذة المنبثقة */
     .modal {
       display: none;
       position: fixed;
@@ -99,16 +108,18 @@
       align-items: center;
       justify-content: center;
       padding: 15px;
+      z-index: 1000;
     }
     .modal-content {
       background: var(--card);
       padding: 20px;
-      border-radius: 12px;
+      border-radius: 16px;
       width: 100%;
       max-width: 400px;
+      box-sizing: border-box;
     }
     .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; margin-bottom: 5px; color: var(--subtext); }
+    .form-group label { display: block; margin-bottom: 6px; color: var(--subtext); font-size: 13px; }
     .form-group input, .form-group select {
       width: 100%;
       padding: 10px;
@@ -117,50 +128,56 @@
       background: #0f172a;
       color: white;
       box-sizing: border-box;
+      font-size: 14px;
     }
-    .btn-submit { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-    .btn-close { width: 100%; padding: 8px; background: #64748b; color: white; border: none; border-radius: 8px; margin-top: 8px; cursor: pointer; }
+    .btn-submit { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+    .btn-close { width: 100%; padding: 10px; background: #475569; color: white; border: none; border-radius: 8px; margin-top: 8px; cursor: pointer; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>متجر الشحن السريع</h1>
+  <header>
+    <h1>متجر الشحن السريع</h1>
+  </header>
 
-  <!-- قسم متابعة حالة الطلب -->
-  <div class="status-box">
-    <h3 style="margin-top:0;">🔍 متابعة حالة الطلب</h3>
-    <input type="text" id="searchQuery" placeholder="أدخل رقم الهاتف أو آيدي الحساب (Player ID)">
-    <button class="search-btn" onclick="checkOrderStatus()">فحص حالة الطلب</button>
+  <!-- متابعة الطلب -->
+  <div class="track-section">
+    <h3>🔍 متابعة حالة الطلب</h3>
+    <div class="track-input-group">
+      <input type="text" id="searchQuery" placeholder="أدخل رقم الهاتف أو الآيدي">
+      <button class="track-btn" onclick="checkOrderStatus()">فحص</button>
+    </div>
     <div id="statusResult"></div>
   </div>
 
-  <h2>الألعاب والخدمات</h2>
+  <div class="section-title">الألعاب والخدمات</div>
   <div class="products">
     <div class="product-card">
-      <div>
-        <h3> Free Fire - 100 جوهرة</h3>
-        <p style="color:var(--subtext)">14 د.ل</p>
+      <div class="product-info">
+        <h3>Free Fire - 100 جوهرة</h3>
+        <p>14 د.ل</p>
       </div>
       <button class="btn" onclick="openOrder('Free Fire - 100 جوهرة', 14)">شراء</button>
     </div>
+
     <div class="product-card">
-      <div>
-        <h3> PUBG - 60 UC</h3>
-        <p style="color:var(--subtext)">6.5 د.ل</p>
+      <div class="product-info">
+        <h3>PUBG - 60 UC</h3>
+        <p>6.5 د.ل</p>
       </div>
       <button class="btn" onclick="openOrder('PUBG - 60 UC', 6.5)">شراء</button>
     </div>
   </div>
 </div>
 
-<!-- Modal للطلب -->
+<!-- نافذة الطلب المنبثقة -->
 <div class="modal" id="orderModal">
   <div class="modal-content">
-    <h3 id="modalTitle">طلب شراء</h3>
+    <h3 id="modalTitle" style="margin-top:0;">شراء المنتج</h3>
     <div class="form-group">
       <label>ادخل آيدي الحساب (Player ID):</label>
-      <input type="text" id="playerId" required>
+      <input type="text" id="playerId" placeholder="مثال: 1928473929">
     </div>
     <div class="form-group">
       <label>طريقة الدفع:</label>
@@ -176,7 +193,7 @@
     </div>
     <div class="form-group" id="cardGroup" style="display:none;">
       <label>كود كرت التعبئة:</label>
-      <input type="text" id="cardCode">
+      <input type="text" id="cardCode" placeholder="أدخل أرقام الكرت">
     </div>
     <div class="form-group">
       <label>صورة إثبات التحويل (اختياري):</label>
@@ -211,16 +228,16 @@
     document.getElementById('orderModal').style.display = 'none';
   }
 
-  // الدالة الخاصة بمتابعة حالة الطلب
+  // فحص حالة الطلب
   async function checkOrderStatus() {
     const query = document.getElementById('searchQuery').value.trim();
     const resultDiv = document.getElementById('statusResult');
     if (!query) {
-      resultDiv.innerHTML = '<p style="color:#ef4444; font-size:14px;">يرجى إدخال رقم الهاتف أو الآيدي.</p>';
+      resultDiv.innerHTML = '<p style="color:#ef4444; font-size:13px; margin-top:8px;">أدخل رقم الهاتف أو الآيدي.</p>';
       return;
     }
 
-    resultDiv.innerHTML = '<p style="color:#94a3b8; font-size:14px;">جاري البحث...</p>';
+    resultDiv.innerHTML = '<p style="color:#94a3b8; font-size:13px; margin-top:8px;">جاري البحث...</p>';
 
     const { data, error } = await supabaseClient
       .from('orders')
@@ -229,7 +246,7 @@
       .order('created_at', { ascending: false });
 
     if (error || !data || data.length === 0) {
-      resultDiv.innerHTML = '<p style="color:#ef4444; font-size:14px;">لم يتم العثور على أي طلبات مرتبطة بهذا الرقم/الآيدي.</p>';
+      resultDiv.innerHTML = '<p style="color:#ef4444; font-size:13px; margin-top:8px;">لم نجد طلبات بهذا الرقم/الآيدي.</p>';
       return;
     }
 
@@ -245,8 +262,8 @@
             <strong>${order.product_name}</strong>
             ${statusBadge}
           </div>
-          <p style="margin:5px 0; font-size:13px; color:#94a3b8;">الآيدي: ${order.player_id}</p>
-          ${order.digital_code ? `<p style="margin:5px 0; font-size:14px; color:#10b981;"><b>الكود الخاص بك:</b> <code style="background:#0f172a; padding:2px 6px; border-radius:4px;">${order.digital_code}</code></p>` : ''}
+          <p style="margin:5px 0 0 0; font-size:12px; color:#94a3b8;">الآيدي: ${order.player_id}</p>
+          ${order.digital_code ? `<p style="margin:8px 0 0 0; font-size:13px; color:#10b981;"><b>الكود:</b> <code style="background:#1e293b; padding:2px 6px; border-radius:4px;">${order.digital_code}</code></p>` : ''}
         </div>
       `;
     });
@@ -296,7 +313,7 @@
 
       if (error) throw error;
 
-      alert('تم إرسال طلبك بنجاح! يمكنك متابعة حالته من أعلى الصفحة باستخدام رقم الهاتف أو الآيدي.');
+      alert('تم إرسال طلبك بنجاح! يمكنك الاستعلام عنه من أعلى الصفحة.');
       closeModal();
     } catch (err) {
       alert('حدث خطأ في الإرسال: ' + err.message);
