@@ -20,62 +20,26 @@
     const { createClient } = supabase;
 
     const supabaseUrl = 'https://alphhjktqdoubsaxjrgm.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFscGhoamt0cWRvdWJzYXhqcmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMzg2NjQsImV4cCI6MjA1NzgxNDY2NH0.p5c4wPqV6pE5g5Y8v3J3L4L6O0P8Q9R1S2T3U4V5W6X'; // مفتاح Anon
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFscGhoamt0cWRvdWJzYXhqcmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMzg2NjQsImV4cCI6MjA1NzgxNDY2NH0.p5c4wPqV6pE5g5Y8v3J3L4L6O0P8Q9R1S2T3U4V5W6X';
     const db = createClient(supabaseUrl, supabaseKey);
 
     function App() {
       const [products, setProducts] = useState([]);
-      const [selectedProduct, setSelectedProduct] = useState(null);
-      const [paymentMethod, setPaymentMethod] = useState('transfer');
-      const [playerId, setPlayerId] = useState('');
-      const [senderPhone, setSenderPhone] = useState('');
-      const [cardCode, setCardCode] = useState('');
-      const [cardCount, setCardCount] = useState(1);
-      const [showReport, setShowReport] = useState(false);
-      const [reportPhone, setReportPhone] = useState('');
-      const [reportMsg, setReportMsg] = useState('');
-      const [loading, setLoading] = useState(false);
+      const [loading, setLoading] = useState(true);
+      const [errorMsg, setErrorMsg] = useState('');
 
       useEffect(() => {
-        db.from('products').select('*').then(({ data, error }) => {
-          if (!error && data) setProducts(data);
-          else console.error(error);
-        });
+        async function loadData() {
+          const { data, error } = await db.from('products').select('*');
+          if (error) {
+            setErrorMsg(error.message);
+          } else {
+            setProducts(data || []);
+          }
+          setLoading(false);
+        }
+        loadData();
       }, []);
-
-      async function handleOrder(e) {
-        e.preventDefault();
-        setLoading(true);
-        let order = {
-          product_name: selectedProduct.name,
-          price: selectedProduct.price,
-          player_id: playerId,
-          payment_method: paymentMethod === 'transfer' ? 'تحويل رصيد' : 'كروت شحن',
-          status: 'pending'
-        };
-        if (paymentMethod === 'transfer') order.sender_phone = senderPhone;
-        else { order.card_code = cardCode; order.card_count = cardCount; }
-
-        const { error } = await db.from('orders').insert([order]);
-        setLoading(false);
-        if (error) alert('حدث خطأ أثناء إرسال الطلب');
-        else {
-          alert('تم إرسال طلبك بنجاح!');
-          setSelectedProduct(null);
-        }
-      }
-
-      async function handleReport(e) {
-        e.preventDefault();
-        setLoading(true);
-        const { error } = await db.from('reports').insert([{ user_phone: reportPhone, message: reportMsg }]);
-        setLoading(false);
-        if (error) alert('حدث خطأ أثناء إرسال البلاغ');
-        else {
-          alert('تم إرسال البلاغ للإدارة بنجاح');
-          setShowReport(false);
-        }
-      }
 
       return (
         <div style={{ padding: '15px' }}>
@@ -87,80 +51,18 @@
           </div>
 
           <h3>العروض المتاحة</h3>
+
+          {loading && <p style={{ color: '#38bdf8' }}>جاري تحميل العروض...</p>}
+          {errorMsg && <p style={{ color: '#ef4444' }}>خطأ في الجلب: {errorMsg}</p>}
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '10px' }}>
             {products.map(p => (
               <div key={p.id} style={{ backgroundColor: '#1e293b', padding: '10px', borderRadius: '8px', textAlign: 'center', border: '1px solid #334155' }}>
                 <h4 style={{ margin: '5px 0', fontSize: '14px' }}>{p.name}</h4>
                 <p style={{ color: '#38bdf8', margin: '5px 0', fontWeight: 'bold' }}>{p.in_stock ? `${p.price} د.ل` : 'قريباً'}</p>
-                {p.in_stock ? (
-                  <button onClick={() => setSelectedProduct(p)} style={{ backgroundColor: '#2563eb', color: '#fff', border: 'none', width: '100%', padding: '6px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-                    شحن الآن
-                  </button>
-                ) : (
-                  <span style={{ color: '#94a3b8', fontSize: '12px' }}>غير متاح</span>
-                )}
               </div>
             ))}
           </div>
-
-          <div style={{ marginTop: '30px', textAlign: 'center' }}>
-            <button onClick={() => setShowReport(true)} style={{ backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold' }}>
-              ⚠️ تقديم بلاغ / شكوى
-            </button>
-          </div>
-
-          {selectedProduct && (
-            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '15px', zIndex: 1000 }}>
-              <div style={{ backgroundColor: '#1e293b', padding: '20px', borderRadius: '10px', width: '100%', maxWidth: '350px' }}>
-                <h3 style={{ marginTop: 0 }}>شحن: {selectedProduct.name}</h3>
-                <form onSubmit={handleOrder}>
-                  <label style={{ fontSize: '13px' }}>Player ID:</label>
-                  <input required value={playerId} onChange={e => setPlayerId(e.target.value)} placeholder="أدخل الآيدي" style={{ width: '100%', padding: '8px', margin: '5px 0 10px', boxSizing: 'border-box', backgroundColor: '#0f172a', color: '#fff', border: '1px solid #475569', borderRadius: '4px' }} />
-                  
-                  <label style={{ fontSize: '13px' }}>طريقة الدفع:</label>
-                  <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} style={{ width: '100%', padding: '8px', margin: '5px 0 10px', boxSizing: 'border-box', backgroundColor: '#0f172a', color: '#fff', border: '1px solid #475569', borderRadius: '4px' }}>
-                    <option value="transfer">تحويل رصيد (0944235295)</option>
-                    <option value="card">كتابة كروت</option>
-                  </select>
-
-                  {paymentMethod === 'transfer' ? (
-                    <div>
-                      <label style={{ fontSize: '13px' }}>رقمك المحول منه:</label>
-                      <input required value={senderPhone} onChange={e => setSenderPhone(e.target.value)} placeholder="09XXXXXXXX" style={{ width: '100%', padding: '8px', margin: '5px 0 10px', boxSizing: 'border-box', backgroundColor: '#0f172a', color: '#fff', border: '1px solid #475569', borderRadius: '4px' }} />
-                    </div>
-                  ) : (
-                    <div>
-                      <label style={{ fontSize: '13px' }}>أرقام الكرت:</label>
-                      <textarea required value={cardCode} onChange={e => setCardCode(e.target.value)} placeholder="اكتب أرقام الكرت هنا" style={{ width: '100%', padding: '8px', margin: '5px 0 10px', boxSizing: 'border-box', backgroundColor: '#0f172a', color: '#fff', border: '1px solid #475569', borderRadius: '4px' }} />
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                    <button type="submit" disabled={loading} style={{ flex: 1, backgroundColor: '#16a34a', color: '#fff', border: 'none', padding: '8px', borderRadius: '4px', fontWeight: 'bold' }}>تأكيد</button>
-                    <button type="button" onClick={() => setSelectedProduct(null)} style={{ backgroundColor: '#64748b', color: '#fff', border: 'none', padding: '8px', borderRadius: '4px' }}>إلغاء</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {showReport && (
-            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '15px', zIndex: 1000 }}>
-              <div style={{ backgroundColor: '#1e293b', padding: '20px', borderRadius: '10px', width: '100%', maxWidth: '350px' }}>
-                <h3 style={{ color: '#ef4444', marginTop: 0 }}>تقديم بلاغ</h3>
-                <form onSubmit={handleReport}>
-                  <label style={{ fontSize: '13px' }}>رقم الهاتف:</label>
-                  <input value={reportPhone} onChange={e => setReportPhone(e.target.value)} placeholder="09XXXXXXXX" style={{ width: '100%', padding: '8px', margin: '5px 0 10px', boxSizing: 'border-box', backgroundColor: '#0f172a', color: '#fff', border: '1px solid #475569', borderRadius: '4px' }} />
-                  <label style={{ fontSize: '13px' }}>التفاصيل:</label>
-                  <textarea required value={reportMsg} onChange={e => setReportMsg(e.target.value)} placeholder="اكتب تفاصيل الشكوى..." style={{ width: '100%', padding: '8px', margin: '5px 0 10px', boxSizing: 'border-box', backgroundColor: '#0f172a', color: '#fff', border: '1px solid #475569', borderRadius: '4px' }} />
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button type="submit" disabled={loading} style={{ flex: 1, backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '8px', borderRadius: '4px', fontWeight: 'bold' }}>إرسال</button>
-                    <button type="button" onClick={() => setShowReport(false)} style={{ backgroundColor: '#64748b', color: '#fff', border: 'none', padding: '8px', borderRadius: '4px' }}>إلغاء</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
         </div>
       );
     }
