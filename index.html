@@ -1,217 +1,304 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Line Mazd - لاين مزد للشحن الإلكتروني</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+import React, { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+
+// اتصال Supabase
+const supabaseUrl = 'https://alphhjktqdoubsaxjrgm.supabase.co';
+const supabaseKey = 'YOUR_SUPABASE_ANON_KEY'; // تأكد من استبدال المفتاح إن كان معرفاً في ملف .env
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+export default function App() {
+  const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('transfer'); // transfer or card
+  
+  // بيانات النموذج
+  const [playerId, setPlayerId] = useState('');
+  const [senderPhone, setSenderPhone] = useState('');
+  const [receiptImage, setReceiptImage] = useState(null);
+  const [cardCode, setCardCode] = useState('');
+  const [cardCount, setCardCount] = useState(1);
+
+  // نظام البلاغات
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportPhone, setReportPhone] = useState('');
+  const [reportMessage, setReportMessage] = useState('');
+
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  async function fetchProducts() {
+    const { data, error } = await supabase.from('products').select('*');
+    if (!error && data) setProducts(data);
+  }
+
+  async function handleOrderSubmit(e) {
+    e.preventDefault();
+    if (!playerId) return alert('يرجى إدخال Player ID الخاص بالحساب');
+
+    setLoading(true);
+    let orderDetails = {
+      product_name: selectedProduct.name,
+      price: selectedProduct.price,
+      player_id: playerId,
+      payment_method: paymentMethod === 'transfer' ? 'تحويل رصيد ليبيانا' : 'كتابة كروت',
+      status: 'pending'
+    };
+
+    if (paymentMethod === 'transfer') {
+      if (!senderPhone) {
+        setLoading(false);
+        return alert('يرجى إدخال الرقم الذي حولت منه الرصيد');
+      }
+      orderDetails.sender_phone = senderPhone;
+      // إذا تم رفع صورة
+      if (receiptImage) {
+        const fileExt = receiptImage.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const { data: uploadData, error: uploadErr } = await supabase.storage
+          .from('receipts')
+          .upload(fileName, receiptImage);
+        if (!uploadErr) {
+          orderDetails.receipt_url = fileName;
         }
+      }
+    } else {
+      if (!cardCode) {
+        setLoading(false);
+        return alert('يرجى كتابة أرقام كرت ليبيانا');
+      }
+      orderDetails.card_code = cardCode;
+      orderDetails.card_count = cardCount;
+    }
 
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            padding-bottom: 50px;
-        }
+    const { error } = await supabase.from('orders').insert([orderDetails]);
+    setLoading(false);
 
-        /* الهيدر وشريط التنقل */
-        header {
-            background-color: #1e293b;
-            padding: 15px 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #3b82f6;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
+    if (error) {
+      alert('حدث خطأ أثناء إرسال الطلب، حاول ثانية');
+    } else {
+      alert('تم إرسال طلبك بنجاح! سيتم التنفيذ قريباً.');
+      setSelectedProduct(null);
+      resetForm();
+    }
+  }
 
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #38bdf8;
-            letter-spacing: 1px;
-        }
+  async function handleReportSubmit(e) {
+    e.preventDefault();
+    if (!reportMessage) return alert('يرجى كتابة تفاصيل البلاغ');
 
-        .user-balance {
-            background-color: #334155;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            color: #4ade80;
-            border: 1px solid #4ade80;
-        }
+    setLoading(true);
+    const { error } = await supabase.from('reports').insert([
+      { user_phone: reportPhone, message: reportMessage }
+    ]);
+    setLoading(false);
 
-        /* البانر الرئيسي */
-        .hero {
-            text-align: center;
-            padding: 40px 20px;
-            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-        }
+    if (error) {
+      alert('حدث خطأ أثناء إرسال البلاغ');
+    } else {
+      alert('تم إرسال البلاغ للإدارة بنجاح');
+      setShowReportModal(false);
+      setReportPhone('');
+      setReportMessage('');
+    }
+  }
 
-        .hero h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-            color: #ffffff;
-        }
+  function resetForm() {
+    setPlayerId('');
+    setSenderPhone('');
+    setReceiptImage(null);
+    setCardCode('');
+    setCardCount(1);
+  }
 
-        .hero p {
-            color: #94a3b8;
-            font-size: 15px;
-        }
+  return (
+    <div style={{ backgroundColor: '#0f172a', color: '#fff', minHeight: '100vh', padding: '15px', fontFamily: 'sans-serif', direction: 'rtl' }}>
+      
+      {/* الترويسة العلوية مع زر الواتساب */}
+      <div style={{ display: 'flex', justifyContent: 'space-[#0f172a]', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1e293b', paddingBottom: '15px', marginBottom: '20px' }}>
+        <h2 style={{ margin: 0, fontSize: '20px' }}>خط المجد لشحن الألعاب</h2>
+        <a 
+          href="https://wa.me/218913147002" 
+          target="_blank" 
+          rel="noreferrer" 
+          style={{ backgroundColor: '#25D366', color: '#fff', padding: '8px 14px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px' }}
+        >
+          📱 واتساب الدعم
+        </a>
+      </div>
 
-        /* شبكة الألعاب والبطاقات */
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+      {/* قائمة المنتجات */}
+      <h3 style={{ borderRight: '4px solid #3b82f6', paddingRight: '10px' }}>الألعاب والبطاقات المتاحة</h3>
+      
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px', marginTop: '15px' }}>
+        {products.map((p) => (
+          <div key={p.id} style={{ backgroundColor: '#1e293b', padding: '12px', borderRadius: '10px', textAlign: 'center', border: '1px solid #334155' }}>
+            <h4 style={{ margin: '5px 0', fontSize: '15px' }}>{p.name}</h4>
+            <p style={{ color: '#38bdf8', fontWeight: 'bold', margin: '5px 0' }}>
+              {p.in_stock ? `${p.price} د.ل` : 'قريباً'}
+            </p>
+            {p.in_stock ? (
+              <button 
+                onClick={() => { setSelectedProduct(p); resetForm(); }}
+                style={{ backgroundColor: '#2563eb', color: '#fff', border: 'none', width: '100%', padding: '8px', borderRadius: '6px', cursor: 'pointer', marginTop: '5px', fontWeight: 'bold' }}
+              >
+                شحن الآن
+              </button>
+            ) : (
+              <span style={{ color: '#94a3b8', fontSize: '12px' }}>غير متاح حالياً</span>
+            )}
+          </div>
+        ))}
+      </div>
 
-        .section-title {
-            font-size: 20px;
-            margin-bottom: 20px;
-            border-right: 4px solid #3b82f6;
-            padding-right: 10px;
-        }
+      {/* زر تقديم بلاغ أسفل الصفحة */}
+      <div style={{ marginTop: '40px', textAlign: 'center' }}>
+        <button 
+          onClick={() => setShowReportModal(true)}
+          style={{ backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+        >
+          ⚠️ تقديم بلاغ / شكوى
+        </button>
+      </div>
 
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 20px;
-        }
+      {/* نافذة الشحن اليدوي عند اختيار منتج */}
+      {selectedProduct && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '15px', zIndex: 1000 }}>
+          <div style={{ backgroundColor: '#1e293b', width: '100%', maxWidth: '420px', padding: '20px', borderRadius: '12px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3 style={{ marginTop: 0 }}>شحن: {selectedProduct.name}</h3>
+            <p style={{ color: '#38bdf8' }}>السعر: {selectedProduct.price} د.ل</p>
 
-        .card {
-            background-color: #1e293b;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid #334155;
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-        }
+            <form onSubmit={handleOrderSubmit}>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>Player ID (معرف اللاعب):</label>
+              <input 
+                type="text" 
+                required
+                value={playerId} 
+                onChange={(e) => setPlayerId(e.target.value)}
+                placeholder="أدخل الآيدي هنا" 
+                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', marginBottom: '15px', boxSizing: 'border-box' }}
+              />
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2);
-            border-color: #3b82f6;
-        }
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>طريقة الدفع:</label>
+              <select 
+                value={paymentMethod} 
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', marginBottom: '15px', boxSizing: 'border-box' }}
+              >
+                <option value="transfer">تحويل رصيد ليبيانا (0944235295)</option>
+                <option value="card">كتابة كرت ليبيانا</option>
+              </select>
 
-        .card-img {
-            width: 100%;
-            height: 140px;
-            background-color: #334155;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-        }
-
-        .card-body {
-            padding: 15px;
-            text-align: center;
-        }
-
-        .card-title {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .card-price {
-            color: #38bdf8;
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-
-        .btn-buy {
-            width: 100%;
-            padding: 10px;
-            background-color: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-buy:hover {
-            background-color: #1d4ed8;
-        }
-
-        /* فوتر */
-        footer {
-            text-align: center;
-            margin-top: 50px;
-            color: #64748b;
-            font-size: 13px;
-        }
-    </style>
-</head>
-<body>
-
-    <header>
-        <div class="logo">LINE MAZD</div>
-        <div class="user-balance">الرصيد: 0.00 د.ل</div>
-    </header>
-
-    <section class="hero">
-        <h1>متجر Line Mazd لشحن الكروت والألعاب</h1>
-        <p>تسليم فوري وسريع لجميع خدماتك المفضلّة في ليبيا</p>
-    </section>
-
-    <div class="container">
-        <h2 class="section-title">الألعاب والبطاقات المتاحة</h2>
-        
-        <div class="cards-grid">
-            <!-- كرت ببجي -->
-            <div class="card">
-                <div class="card-img">🎮</div>
-                <div class="card-body">
-                    <div class="card-title">PUBG Mobile (60 UC)</div>
-                    <div class="card-price">5.00 د.ل</div>
-                    <button class="btn-buy" onclick="alert('سيتم ربطه بنظام الشحن قريباً!')">شراء الآن</button>
+              {paymentMethod === 'transfer' ? (
+                <div>
+                  <div style={{ backgroundColor: '#0f172a', padding: '10px', borderRadius: '6px', color: '#f59e0b', fontSize: '13px', marginBottom: '15px' }}>
+                    📌 يرجى تحويل الرصيد إلى الرقم: <strong>0944235295</strong> ثم إدخال رقمك وإرفاق صورة الإثبات.
+                  </div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>الرقم الذي حولت منه:</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={senderPhone} 
+                    onChange={(e) => setSenderPhone(e.target.value)}
+                    placeholder="09XXXXXXXX" 
+                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', marginBottom: '15px', boxSizing: 'border-box' }}
+                  />
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>صورة إثبات التحويل (اختياري):</label>
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={(e) => setReceiptImage(e.target.files[0])}
+                    style={{ width: '100%', marginBottom: '15px' }}
+                  />
                 </div>
-            </div>
-
-            <!-- كرت فري فاير -->
-            <div class="card">
-                <div class="card-img">🔥</div>
-                <div class="card-body">
-                    <div class="card-title">Free Fire (100 Diamonds)</div>
-                    <div class="card-price">6.50 د.ل</div>
-                    <button class="btn-buy" onclick="alert('سيتم ربطه بنظام الشحن قريباً!')">شراء الآن</button>
+              ) : (
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>أرقام الكرت / الكروت:</label>
+                  <textarea 
+                    required
+                    value={cardCode} 
+                    onChange={(e) => setCardCode(e.target.value)}
+                    placeholder="اكتب أرقام كرت الشحن هنا" 
+                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', marginBottom: '15px', boxSizing: 'border-box', height: '60px' }}
+                  />
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>عدد الكروت:</label>
+                  <input 
+                    type="number" 
+                    min="1"
+                    value={cardCount} 
+                    onChange={(e) => setCardCount(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', marginBottom: '15px', boxSizing: 'border-box' }}
+                  />
                 </div>
-            </div>
+              )}
 
-            <!-- كرت ليبيانا -->
-            <div class="card">
-                <div class="card-img">📱</div>
-                <div class="card-body">
-                    <div class="card-title">كرت ليبيانا 10 دينار</div>
-                    <div class="card-price">10.00 د.ل</div>
-                    <button class="btn-buy" onclick="alert('سيتم ربطه بنظام الشحن قريباً!')">شراء الآن</button>
-                </div>
-            </div>
-
-            <!-- كرت المدار -->
-            <div class="card">
-                <div class="card-img">📡</div>
-                <div class="card-body">
-                    <div class="card-title">كرت مدار 10 دينار</div>
-                    <div class="card-price">10.00 د.ل</div>
-                    <button class="btn-buy" onclick="alert('سيتم ربطه بنظام الشحن قريباً!')">شراء الآن</button>
-                </div>
-            </div>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  style={{ flex: 1, backgroundColor: '#16a34a', color: '#fff', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  {loading ? 'جاري إرسال الطلب...' : 'تأكيد الشحن'}
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setSelectedProduct(null)}
+                  style={{ backgroundColor: '#64748b', color: '#fff', border: 'none', padding: '10px 15px', borderRadius: '6px', cursor: 'pointer' }}
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
+      )}
+
+      {/* نافذة الشكاوى والبلاغات */}
+      {showReportModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '15px', zIndex: 1000 }}>
+          <div style={{ backgroundColor: '#1e293b', width: '100%', maxWidth: '400px', padding: '20px', borderRadius: '12px' }}>
+            <h3 style={{ marginTop: 0, color: '#ef4444' }}>تقديم بلاغ أو مشكلة</h3>
+            <form onSubmit={handleReportSubmit}>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>رقم هاتفك (للتواصل معك):</label>
+              <input 
+                type="text" 
+                value={reportPhone} 
+                onChange={(e) => setReportPhone(e.target.value)}
+                placeholder="09XXXXXXXX" 
+                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', marginBottom: '15px', boxSizing: 'border-box' }}
+              />
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>تفاصيل الشكوى / البلاغ:</label>
+              <textarea 
+                required
+                value={reportMessage} 
+                onChange={(e) => setReportMessage(e.target.value)}
+                placeholder="اكتب المشكلة التي واجهتك بالتفصيل..." 
+                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', marginBottom: '15px', boxSizing: 'border-box', height: '80px' }}
+              />
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  style={{ flex: 1, backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  {loading ? 'جاري الإرسال...' : 'إرسال البلاغ'}
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setShowReportModal(false)}
+                  style={{ backgroundColor: '#64748b', color: '#fff', border: 'none', padding: '10px 15px', borderRadius: '6px', cursor: 'pointer' }}
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
-
-    <footer>
-        جميع الحقوق محفوظة © Line Mazd 2026
-    </footer>
-
-</body>
-</html>
+  );
+}
