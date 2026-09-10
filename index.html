@@ -1,327 +1,377 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>متجر المجد للشحن السريع</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Line Mazd</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --accent: #10b981;
-      --accent-hover: #059669;
-      --text: #f8fafc;
-      --subtext: #94a3b8;
-    }
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 15px;
-      direction: rtl;
-    }
-    .container { max-width: 500px; margin: 0 auto; }
-    
-    header { text-align: center; margin-bottom: 25px; margin-top: 10px; }
-    header h1 { margin: 0; font-size: 24px; color: #fff; }
-    
-    /* قسم متابعة حالة الطلب بتصميم أنيق */
-    .track-section {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 25px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-    .track-section h3 { margin: 0 0 12px 0; font-size: 16px; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
-    .track-input-group { display: flex; gap: 8px; }
-    .track-input-group input {
-      flex: 1;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #334155;
-      background: #0f172a;
-      color: white;
-      font-size: 14px;
-      outline: none;
-    }
-    .track-btn {
-      background: #3b82f6;
-      color: white;
-      border: none;
-      padding: 0 16px;
-      border-radius: 10px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 14px;
-      white-space: nowrap;
-    }
-    
-    /* نتائج البحث */
-    .result-card {
-      margin-top: 12px;
-      padding: 12px;
-      background: #0f172a;
-      border-radius: 10px;
-      border-right: 4px solid #3b82f6;
-      font-size: 14px;
-    }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-    .status-pending { background: #f59e0b; color: #000; }
-    .status-completed { background: #10b981; color: #fff; }
-    .status-rejected { background: #ef4444; color: #fff; }
-
-    /* عنوان الألعاب */
-    .section-title { font-size: 18px; margin-bottom: 15px; color: var(--text); }
-
-    /* شبكة المنتجات */
-    .products { display: flex; flex-direction: column; gap: 12px; }
-    .product-card {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .product-info h3 { margin: 0 0 4px 0; font-size: 16px; }
-    .product-info p { margin: 0; color: var(--subtext); font-size: 14px; }
-    .btn {
-      background: var(--accent);
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 14px;
-    }
-
-    /* النافذة المنبثقة */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
-      align-items: center;
-      justify-content: center;
-      padding: 15px;
-      z-index: 1000;
-    }
-    .modal-content {
-      background: var(--card);
-      padding: 20px;
-      border-radius: 16px;
-      width: 100%;
-      max-width: 400px;
-      box-sizing: border-box;
-    }
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; margin-bottom: 6px; color: var(--subtext); font-size: 13px; }
-    .form-group input, .form-group select {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #334155;
-      background: #0f172a;
-      color: white;
-      box-sizing: border-box;
-      font-size: 14px;
-    }
-    .btn-submit { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 5px; }
-    .btn-close { width: 100%; padding: 10px; background: #475569; color: white; border: none; border-radius: 8px; margin-top: 8px; cursor: pointer; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background-color: #0f172a; color: #fff; font-family: system-ui, -apple-system, sans-serif; }
+    input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 12px; background-color: #0f172a; color: #fff; border: 1px solid #334155; border-radius: 6px; }
+    .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
+    .card:hover { border-color: #38bdf8; }
+    .modal { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; padding: 15px; z-index: 1000; }
+    .modal-content { background: #1e293b; padding: 20px; border-radius: 12px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+    .status-pending { background-color: #f59e0b; color: #000; }
+    .status-completed { background-color: #16a34a; color: #fff; }
+    .status-rejected { background-color: #dc2626; color: #fff; }
   </style>
 </head>
 <body>
+  <div id="root"></div>
 
-<div class="container">
-  <header>
-    <h1>متجر الشحن السريع</h1>
-  </header>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const { createClient } = supabase;
 
-  <!-- متابعة الطلب -->
-  <div class="track-section">
-    <h3>🔍 متابعة حالة الطلب</h3>
-    <div class="track-input-group">
-      <input type="text" id="searchQuery" placeholder="أدخل رقم الهاتف أو الآيدي">
-      <button class="track-btn" onclick="checkOrderStatus()">فحص</button>
-    </div>
-    <div id="statusResult"></div>
-  </div>
+    const supabaseUrl = 'https://alphhjktqdoubsaxjrgm.supabase.co';
+    const supabaseKey = 'sb_publishable_Yyzx9XadPI-ucUkpppQNEg_PGGWqWxx';
+    const db = createClient(supabaseUrl, supabaseKey);
 
-  <div class="section-title">الألعاب والخدمات</div>
-  <div class="products">
-    <div class="product-card">
-      <div class="product-info">
-        <h3>Free Fire - 100 جوهرة</h3>
-        <p>14 د.ل</p>
-      </div>
-      <button class="btn" onclick="openOrder('Free Fire - 100 جوهرة', 14)">شراء</button>
-    </div>
+    const GAMES = [
+      { id: 'freefire', name: 'Free Fire', img: '🔥' },
+      { id: 'pubg', name: 'PUBG Mobile', img: '🪖' },
+      { id: 'itunes', name: 'iTunes Gift Cards', img: '🍎' }
+    ];
 
-    <div class="product-card">
-      <div class="product-info">
-        <h3>PUBG - 60 UC</h3>
-        <p>6.5 د.ل</p>
-      </div>
-      <button class="btn" onclick="openOrder('PUBG - 60 UC', 6.5)">شراء</button>
-    </div>
-  </div>
-</div>
+    function App() {
+      const [products, setProducts] = useState([]);
+      const [selectedGame, setSelectedGame] = useState(null);
+      const [selectedOffer, setSelectedOffer] = useState(null);
+      
+      // عناصر طلب الشحن
+      const [paymentMethod, setPaymentMethod] = useState('transfer');
+      const [playerId, setPlayerId] = useState('');
+      const [senderPhone, setSenderPhone] = useState('');
+      const [cardCode, setCardCode] = useState('');
+      const [imageFile, setImageFile] = useState(null);
 
-<!-- نافذة الطلب المنبثقة -->
-<div class="modal" id="orderModal">
-  <div class="modal-content">
-    <h3 id="modalTitle" style="margin-top:0;">شراء المنتج</h3>
-    <div class="form-group">
-      <label>ادخل آيدي الحساب (Player ID):</label>
-      <input type="text" id="playerId" placeholder="مثال: 1928473929">
-    </div>
-    <div class="form-group">
-      <label>طريقة الدفع:</label>
-      <select id="paymentMethod" onchange="togglePaymentFields()">
-        <option value="ليبيانا">تحويل رصيد ليبيانا (0944235295)</option>
-        <option value="مدار">تحويل رصيد مدار (0944235295)</option>
-        <option value="كروت">كروت تعبئة</option>
-      </select>
-    </div>
-    <div class="form-group" id="phoneGroup">
-      <label>رقم هاتف المرسل:</label>
-      <input type="text" id="senderPhone" placeholder="09XXXXXXXX">
-    </div>
-    <div class="form-group" id="cardGroup" style="display:none;">
-      <label>كود كرت التعبئة:</label>
-      <input type="text" id="cardCode" placeholder="أدخل أرقام الكرت">
-    </div>
-    <div class="form-group">
-      <label>صورة إثبات التحويل (اختياري):</label>
-      <input type="file" id="receiptFile" accept="image/*">
-    </div>
-    <button class="btn-submit" id="submitBtn" onclick="submitOrder()">إرسال الطلب</button>
-    <button class="btn-close" onclick="closeModal()">إلغاء</button>
-  </div>
-</div>
+      // البلاغات واستلام الأكواد ومتابعة حالة الطلبات
+      const [showReport, setShowReport] = useState(false);
+      const [reportPhone, setReportPhone] = useState('');
+      const [reportMsg, setReportMsg] = useState('');
+      
+      const [showCheckCode, setShowCheckCode] = useState(false);
+      const [searchPhone, setSearchPhone] = useState('');
+      const [retrievedCode, setRetrievedCode] = useState(null);
 
-<script>
-  const SUPABASE_URL = "https://aomakujftptysdytlmnz.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvbWFrdWpmdHB0eXNkeXRsbW56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTcyNzQsImV4cCI6MjA1Njc5MzI3NH0.GToU7C6S2-6L0jC9N8mP-U_y10A9S7wS8zN6uL5M_kY";
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const [showOrderStatus, setShowOrderStatus] = useState(false);
+      const [statusQuery, setStatusQuery] = useState('');
+      const [orderStatusResults, setOrderStatusResults] = useState(null);
 
-  let selectedProduct = '';
-  let selectedPrice = 0;
+      const [loading, setLoading] = useState(false);
 
-  function togglePaymentFields() {
-    const method = document.getElementById('paymentMethod').value;
-    document.getElementById('cardGroup').style.display = (method === 'كروت') ? 'block' : 'none';
-  }
+      useEffect(() => {
+        // تسجيل الزائر
+        db.from('visitors').insert([{ user_agent: navigator.userAgent }]).then(() => {});
 
-  function openOrder(name, price) {
-    selectedProduct = name;
-    selectedPrice = price;
-    document.getElementById('modalTitle').innerText = `شراء: ${name} (${price} د.ل)`;
-    document.getElementById('orderModal').style.display = 'flex';
-  }
+        // جلب المنتجات
+        async function fetchProducts() {
+          const { data } = await db.from('products').select('*');
+          if (data) setProducts(data);
+        }
+        fetchProducts();
+      }, []);
 
-  function closeModal() {
-    document.getElementById('orderModal').style.display = 'none';
-  }
+      // رفع الصورة
+      async function uploadImage(file) {
+        if (!file) return null;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const { data, error } = await db.storage.from('receipts').upload(fileName, file);
+        if (error) return null;
+        const { data: publicUrlData } = db.storage.from('receipts').getPublicUrl(fileName);
+        return publicUrlData.publicUrl;
+      }
 
-  // فحص حالة الطلب
-  async function checkOrderStatus() {
-    const query = document.getElementById('searchQuery').value.trim();
-    const resultDiv = document.getElementById('statusResult');
-    if (!query) {
-      resultDiv.innerHTML = '<p style="color:#ef4444; font-size:13px; margin-top:8px;">أدخل رقم الهاتف أو الآيدي.</p>';
-      return;
-    }
+      async function handleOrder(e) {
+        e.preventDefault();
+        setLoading(true);
 
-    resultDiv.innerHTML = '<p style="color:#94a3b8; font-size:13px; margin-top:8px;">جاري البحث...</p>';
+        let imgUrl = null;
+        if (imageFile) {
+          imgUrl = await uploadImage(imageFile);
+        }
 
-    const { data, error } = await supabaseClient
-      .from('orders')
-      .select('*')
-      .or(`sender_phone.eq.${query},player_id.eq.${query}`)
-      .order('created_at', { ascending: false });
+        let order = {
+          product_name: selectedOffer.name,
+          price: selectedOffer.price,
+          player_id: selectedOffer.category === 'itunes' ? 'iTunes (تسليم كود)' : playerId,
+          payment_method: paymentMethod === 'transfer' ? 'تحويل رصيد ليبيانا' : 'كتابة الكرت',
+          receipt_url: imgUrl,
+          status: 'pending'
+        };
 
-    if (error || !data || data.length === 0) {
-      resultDiv.innerHTML = '<p style="color:#ef4444; font-size:13px; margin-top:8px;">لم نجد طلبات بهذا الرقم/الآيدي.</p>';
-      return;
-    }
+        if (paymentMethod === 'transfer') {
+          order.sender_phone = senderPhone;
+        } else {
+          order.card_code = cardCode;
+          order.sender_phone = senderPhone;
+        }
 
-    let html = '';
-    data.forEach(order => {
-      let statusBadge = '<span class="badge status-pending">قيد الانتظار ⏳</span>';
-      if (order.status === 'completed') statusBadge = '<span class="badge status-completed">مكتمل ✅</span>';
-      if (order.status === 'rejected') statusBadge = '<span class="badge status-rejected">مرفوض ❌</span>';
+        const { error } = await db.from('orders').insert([order]);
+        setLoading(false);
 
-      html += `
-        <div class="result-card">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <strong>${order.product_name}</strong>
-            ${statusBadge}
-          </div>
-          <p style="margin:5px 0 0 0; font-size:12px; color:#94a3b8;">الآيدي: ${order.player_id}</p>
-          ${order.digital_code ? `<p style="margin:8px 0 0 0; font-size:13px; color:#10b981;"><b>الكود:</b> <code style="background:#1e293b; padding:2px 6px; border-radius:4px;">${order.digital_code}</code></p>` : ''}
-        </div>
-      `;
-    });
-
-    resultDiv.innerHTML = html;
-  }
-
-  // إرسال الطلب
-  async function submitOrder() {
-    const playerId = document.getElementById('playerId').value.trim();
-    const paymentMethod = document.getElementById('paymentMethod').value;
-    const senderPhone = document.getElementById('senderPhone').value.trim();
-    const cardCode = document.getElementById('cardCode').value.trim();
-    const fileInput = document.getElementById('receiptFile');
-    const submitBtn = document.getElementById('submitBtn');
-
-    if (!playerId) { alert('يرجى إدخال آيدي الحساب'); return; }
-
-    submitBtn.innerText = 'جاري الإرسال...';
-    submitBtn.disabled = true;
-
-    try {
-      let receiptUrl = null;
-      if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const fileName = `${Date.now()}_${file.name}`;
-        const { data: uploadData, error: uploadError } = await supabaseClient.storage
-          .from('receipts')
-          .upload(fileName, file);
-
-        if (!uploadError) {
-          const { data: urlData } = supabaseClient.storage.from('receipts').getPublicUrl(fileName);
-          receiptUrl = urlData.publicUrl;
+        if (error) {
+          alert('حدث خطأ في الإرسال: ' + error.message);
+        } else {
+          alert('تم إرسال الطلب بنجاح! يمكنك متابعة حالته في أي وقت بزيارة زر "متابعة حالة الطلب".');
+          setSelectedOffer(null);
+          setPlayerId('');
+          setSenderPhone('');
+          setCardCode('');
+          setImageFile(null);
         }
       }
 
-      const { error } = await supabaseClient.from('orders').insert([{
-        product_name: selectedProduct,
-        price: selectedPrice,
-        player_id: playerId,
-        payment_method: paymentMethod,
-        sender_phone: senderPhone,
-        card_code: cardCode,
-        receipt_url: receiptUrl,
-        status: 'pending'
-      }]);
+      async function handleReport(e) {
+        e.preventDefault();
+        setLoading(true);
+        const { error } = await db.from('reports').insert([{ user_phone: reportPhone, message: reportMsg }]);
+        setLoading(false);
+        if (error) alert('خطأ: ' + error.message);
+        else {
+          alert('تم إرسال البلاغ إلى الإدارة بنجاح');
+          setShowReport(false);
+          setReportPhone('');
+          setReportMsg('');
+        }
+      }
 
-      if (error) throw error;
+      async function handleCheckCode(e) {
+        e.preventDefault();
+        setLoading(true);
+        const { data, error } = await db.from('orders').select('*').eq('sender_phone', searchPhone).not('digital_code', 'is', null);
+        setLoading(false);
+        if (data && data.length > 0) {
+          setRetrievedCode(data);
+        } else {
+          alert('لم يتم العثور على أرقام/أكواد تسليم جهزت لهذا الرقم بعد.');
+        }
+      }
 
-      alert('تم إرسال طلبك بنجاح! يمكنك الاستعلام عنه من أعلى الصفحة.');
-      closeModal();
-    } catch (err) {
-      alert('حدث خطأ في الإرسال: ' + err.message);
-    } finally {
-      submitBtn.innerText = 'إرسال الطلب';
-      submitBtn.disabled = false;
+      async function handleCheckOrderStatus(e) {
+        e.preventDefault();
+        setLoading(true);
+        const { data, error } = await db.from('orders')
+          .select('*')
+          .or(`sender_phone.eq.${statusQuery},player_id.eq.${statusQuery}`)
+          .order('created_at', { ascending: false });
+
+        setLoading(false);
+
+        if (data && data.length > 0) {
+          setOrderStatusResults(data);
+        } else {
+          alert('لم يتم العثور على أي طلب مرابط بهذا الرقم أو الآيدي.');
+          setOrderStatusResults([]);
+        }
+      }
+
+      return (
+        <div style={{ padding: '15px', maxWidth: '500px', margin: '0 auto' }}>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '15px' }}>
+            <h2 style={{ margin: 0, fontSize: '20px', color: '#38bdf8' }}>Line Mazd</h2>
+            <a href="https://wa.me/218913147002" target="_blank" style={{ backgroundColor: '#25D366', color: '#fff', padding: '8px 12px', borderRadius: '6px', textDecoration: 'none', fontWeight: 'bold', fontSize: '13px' }}>
+              📱 واتساب الدعم
+            </a>
+          </div>
+
+          {/* أزرار الخدمات العلويّة */}
+          <div style={{ display: 'flex', gap: '8px', marginTop: '15px', flexWrap: 'wrap' }}>
+            <button onClick={() => setShowOrderStatus(true)} style={{ flex: '1 1 100%', backgroundColor: '#f59e0b', color: '#000', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
+              🔍 متابعة حالة الطلب
+            </button>
+            <button onClick={() => setShowCheckCode(true)} style={{ flex: 1, backgroundColor: '#0284c7', color: '#fff', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
+              🔑 استلام كود آيتونز
+            </button>
+            <button onClick={() => setShowReport(true)} style={{ flex: 1, backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
+              ⚠️ تقديم بلاغ
+            </button>
+          </div>
+
+          {/* اختيار الألعاب */}
+          {!selectedGame && (
+            <div>
+              <h3 style={{ marginTop: '20px' }}>اختر اللعبة أو الخدمة:</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
+                {GAMES.map(g => (
+                  <div key={g.id} className="card" onClick={() => setSelectedGame(g.id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', padding: '20px' }}>
+                    <span style={{ fontSize: '30px' }}>{g.img}</span>
+                    <h3 style={{ margin: 0 }}>{g.name}</h3>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* عرض باقات اللعبة المختارة */}
+          {selectedGame && (
+            <div>
+              <button onClick={() => setSelectedGame(null)} style={{ backgroundColor: '#334155', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', margin: '15px 0', cursor: 'pointer' }}>
+                ⬅️ العودة للقائمة
+              </button>
+              <h3>عروض {GAMES.find(g => g.id === selectedGame)?.name}:</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                {products.filter(p => p.category === selectedGame || (selectedGame === 'freefire' && p.name.includes('Free Fire')) || (selectedGame === 'pubg' && p.name.includes('PUBG')) || (selectedGame === 'itunes' && p.name.includes('iTunes'))).map(p => (
+                  <div key={p.id} className="card" onClick={() => setSelectedOffer(p)}>
+                    <h4 style={{ margin: '5px 0' }}>{p.name}</h4>
+                    <p style={{ color: '#38bdf8', fontWeight: 'bold', margin: '5px 0' }}>{p.price} د.ل</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* نافذة البيانات وإتمام الدفع */}
+          {selectedOffer && (
+            <div className="modal">
+              <div className="modal-content">
+                <h3 style={{ marginTop: 0, color: '#38bdf8' }}>شراء: {selectedOffer.name} ({selectedOffer.price} د.ل)</h3>
+                <form onSubmit={handleOrder}>
+                  
+                  {selectedGame !== 'itunes' && (
+                    <>
+                      <label>ادخل آيدي الحساب (Player ID):</label>
+                      <input required value={playerId} onChange={e => setPlayerId(e.target.value)} placeholder="مثال: 12345678" />
+                    </>
+                  )}
+
+                  <label>طريقة الدفع:</label>
+                  <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
+                    <option value="transfer">تحويل رصيد ليبيانا</option>
+                    <option value="card">كتابة الكرت</option>
+                  </select>
+
+                  {paymentMethod === 'transfer' ? (
+                    <div style={{ backgroundColor: '#0f172a', padding: '10px', borderRadius: '6px', margin: '10px 0', border: '1px solid #334155' }}>
+                      <p style={{ margin: '0 0 8px 0', color: '#f59e0b', fontSize: '13px', fontWeight: 'bold' }}>
+                        الرجاء التحويل إلى الرقم: <span style={{ color: '#fff', fontSize: '15px' }}>0944235295</span>
+                      </p>
+                      <label>الرقم الذي حولت منه الرصيد:</label>
+                      <input required value={senderPhone} onChange={e => setSenderPhone(e.target.value)} placeholder="09XXXXXXXX" />
+                    </div>
+                  ) : (
+                    <div>
+                      <label>أرقام كرت الشحن:</label>
+                      <textarea required value={cardCode} onChange={e => setCardCode(e.target.value)} placeholder="اكتب رقم الكرت هنا" />
+                      <label>رقم هاتف للتواصل مع الطلب:</label>
+                      <input required value={senderPhone} onChange={e => setSenderPhone(e.target.value)} placeholder="09XXXXXXXX" />
+                    </div>
+                  )}
+
+                  <label>صورة إثبات التحويل / الكرت (الاستوديو):</label>
+                  <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files[0])} style={{ padding: '5px' }} />
+
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                    <button type="submit" disabled={loading} style={{ flex: 1, backgroundColor: '#16a34a', color: '#fff', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold' }}>
+                      {loading ? 'جاري الإرسال...' : 'تأكيد ودفع'}
+                    </button>
+                    <button type="button" onClick={() => setSelectedOffer(null)} style={{ backgroundColor: '#64748b', color: '#fff', border: 'none', padding: '10px', borderRadius: '6px' }}>إلغاء</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* نافذة الاستعلام عن حالة الطلب */}
+          {showOrderStatus && (
+            <div className="modal">
+              <div className="modal-content">
+                <h3 style={{ color: '#f59e0b', marginTop: 0 }}>🔍 متابعة حالة الطلب</h3>
+                <p style={{ fontSize: '12px', color: '#94a3b8' }}>أدخل رقم الهاتف أو الآيدي (Player ID) الذي استخدمته للبحث عن حالة الطلب:</p>
+                <form onSubmit={handleCheckOrderStatus}>
+                  <input required value={statusQuery} onChange={e => setStatusQuery(e.target.value)} placeholder="رقم الهاتف أو الآيدي" />
+                  <button type="submit" disabled={loading} style={{ width: '100%', backgroundColor: '#f59e0b', color: '#000', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold' }}>
+                    {loading ? 'جاري البحث...' : 'بحث عن الطلب'}
+                  </button>
+                </form>
+
+                {orderStatusResults && (
+                  <div style={{ marginTop: '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {orderStatusResults.map(item => (
+                      <div key={item.id} style={{ backgroundColor: '#0f172a', padding: '10px', borderRadius: '8px', border: '1px solid #334155' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontWeight: 'bold', fontSize: '14px' }}>{item.product_name}</span>
+                          {item.status === 'completed' && <span className="badge status-completed">مكتمل ✅</span>}
+                          {item.status === 'rejected' && <span className="badge status-rejected">مرفوض ❌</span>}
+                          {(!item.status || item.status === 'pending') && <span className="badge status-pending">قيد الانتظار ⏳</span>}
+                        </div>
+                        <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#94a3b8' }}>الآيدي: {item.player_id}</p>
+                        {item.digital_code && (
+                          <div style={{ marginTop: '8px', padding: '6px', backgroundColor: '#1e293b', borderRadius: '4px', border: '1px solid #16a34a' }}>
+                            <p style={{ margin: 0, fontSize: '13px', color: '#22c55e', fontWeight: 'bold' }}>الكود الخاص بك: {item.digital_code}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button onClick={() => { setShowOrderStatus(false); setOrderStatusResults(null); setStatusQuery(''); }} style={{ width: '100%', backgroundColor: '#64748b', color: '#fff', border: 'none', padding: '8px', borderRadius: '6px', marginTop: '15px' }}>إغلاق</button>
+              </div>
+            </div>
+          )}
+
+          {/* نافذة استلام الكود (آيتونز وغيرها) */}
+          {showCheckCode && (
+            <div className="modal">
+              <div className="modal-content">
+                <h3>🔑 استلام الكود المشترى</h3>
+                <p style={{ fontSize: '12px', color: '#94a3b8' }}>أدخل رقم هاتفك الذي استخدمته أثناء التحويل لاستلام الكود المجهز من الأدمن:</p>
+                <form onSubmit={handleCheckCode}>
+                  <input required value={searchPhone} onChange={e => setSearchPhone(e.target.value)} placeholder="أدخل رقم المحول (09XXXXXXXX)" />
+                  <button type="submit" disabled={loading} style={{ width: '100%', backgroundColor: '#0284c7', color: '#fff', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold' }}>
+                    بحث عن الكود
+                  </button>
+                </form>
+
+                {retrievedCode && (
+                  <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#0f172a', borderRadius: '6px' }}>
+                    {retrievedCode.map(item => (
+                      <div key={item.id} style={{ borderBottom: '1px solid #334155', paddingBottom: '5px', marginBottom: '5px' }}>
+                        <p style={{ margin: 0, fontSize: '13px' }}>المنتج: {item.product_name}</p>
+                        <p style={{ margin: '5px 0', color: '#22c55e', fontWeight: 'bold', fontSize: '16px' }}>الكود: {item.digital_code}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button onClick={() => { setShowCheckCode(false); setRetrievedCode(null); }} style={{ width: '100%', backgroundColor: '#64748b', color: '#fff', border: 'none', padding: '8px', borderRadius: '6px', marginTop: '10px' }}>إغلاق</button>
+              </div>
+            </div>
+          )}
+
+          {/* نافذة البلاغات */}
+          {showReport && (
+            <div className="modal">
+              <div className="modal-content">
+                <h3 style={{ color: '#ef4444' }}>⚠️ تقديم بلاغ / شكوى</h3>
+                <form onSubmit={handleReport}>
+                  <label>رقم التواصل:</label>
+                  <input required value={reportPhone} onChange={e => setReportPhone(e.target.value)} placeholder="09XXXXXXXX" />
+                  <label>نص المشكلة:</label>
+                  <textarea required value={reportMsg} onChange={e => setReportMsg(e.target.value)} placeholder="اكتب تفاصيل البلاغ..." style={{ height: '80px' }} />
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button type="submit" disabled={loading} style={{ flex: 1, backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold' }}>إرسال البلاغ</button>
+                    <button type="button" onClick={() => setShowReport(false)} style={{ backgroundColor: '#64748b', color: '#fff', border: 'none', padding: '10px', borderRadius: '6px' }}>إلغاء</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
     }
-  }
-</script>
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
 </body>
 </html>
