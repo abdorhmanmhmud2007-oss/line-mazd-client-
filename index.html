@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Line Mazd</title>
+  <!-- أيقونة الموقع (اللوجو الحقيقي) -->
+  <link rel="apple-touch-icon" sizes="180x180" href="https://alphhjktqdoubsaxjrgm.supabase.co/storage/v1/object/public/receipts/IMG_6547.png">
+  <link rel="icon" type="image/png" href="https://alphhjktqdoubsaxjrgm.supabase.co/storage/v1/object/public/receipts/IMG_6547.png">
+
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -20,6 +24,7 @@
     .status-pending { background-color: #f59e0b; color: #000; }
     .status-completed { background-color: #16a34a; color: #fff; }
     .status-rejected { background-color: #dc2626; color: #fff; }
+    .game-icon { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -34,9 +39,9 @@
     const db = createClient(supabaseUrl, supabaseKey);
 
     const GAMES = [
-      { id: 'freefire', name: 'Free Fire', img: '🔥' },
-      { id: 'pubg', name: 'PUBG Mobile', img: '🪖' },
-      { id: 'itunes', name: 'iTunes Gift Cards', img: '🍎' }
+      { id: 'freefire', name: 'Free Fire', img: 'https://alphhjktqdoubsaxjrgm.supabase.co/storage/v1/object/public/receipts/IMG_6643.jpeg' },
+      { id: 'pubg', name: 'PUBG Mobile', img: 'https://alphhjktqdoubsaxjrgm.supabase.co/storage/v1/object/public/receipts/IMG_6644.jpeg' },
+      { id: 'itunes', name: 'iTunes Gift Cards', img: 'https://alphhjktqdoubsaxjrgm.supabase.co/storage/v1/object/public/receipts/IMG_6547.png' }
     ];
 
     function App() {
@@ -177,7 +182,10 @@
         <div style={{ padding: '15px', maxWidth: '500px', margin: '0 auto' }}>
           {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '15px' }}>
-            <h2 style={{ margin: 0, fontSize: '20px', color: '#38bdf8' }}>Line Mazd</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <img src="https://alphhjktqdoubsaxjrgm.supabase.co/storage/v1/object/public/receipts/IMG_6547.png" alt="Line Mazd Logo" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '50%' }} />
+              <h2 style={{ margin: 0, fontSize: '20px', color: '#38bdf8' }}>Line Mazd</h2>
+            </div>
             <a href="https://wa.me/218913147002" target="_blank" style={{ backgroundColor: '#25D366', color: '#fff', padding: '8px 12px', borderRadius: '6px', textDecoration: 'none', fontWeight: 'bold', fontSize: '13px' }}>
               📱 واتساب الدعم
             </a>
@@ -202,9 +210,9 @@
               <h3 style={{ marginTop: '20px' }}>اختر اللعبة أو الخدمة:</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
                 {GAMES.map(g => (
-                  <div key={g.id} className="card" onClick={() => setSelectedGame(g.id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', padding: '20px' }}>
-                    <span style={{ fontSize: '30px' }}>{g.img}</span>
-                    <h3 style={{ margin: 0 }}>{g.name}</h3>
+                  <div key={g.id} className="card" onClick={() => setSelectedGame(g.id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '15px', padding: '16px' }}>
+                    <img src={g.img} alt={g.name} className="game-icon" />
+                    <h3 style={{ margin: 0, fontSize: '17px' }}>{g.name}</h3>
                   </div>
                 ))}
               </div>
