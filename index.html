@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Line Mazd</title>
-  <!-- أيقونة الموقع (اللوجو الحقيقي) -->
   <link rel="apple-touch-icon" sizes="180x180" href="https://alphhjktqdoubsaxjrgm.supabase.co/storage/v1/object/public/receipts/IMG_6547.png">
   <link rel="icon" type="image/png" href="https://alphhjktqdoubsaxjrgm.supabase.co/storage/v1/object/public/receipts/IMG_6547.png">
 
@@ -76,14 +75,12 @@
       const [selectedGame, setSelectedGame] = useState(null);
       const [selectedOffer, setSelectedOffer] = useState(null);
       
-      // عناصر طلب الشحن
       const [paymentMethod, setPaymentMethod] = useState('transfer');
       const [playerId, setPlayerId] = useState('');
       const [senderPhone, setSenderPhone] = useState('');
       const [cardCode, setCardCode] = useState('');
       const [imageFile, setImageFile] = useState(null);
 
-      // البلاغات واستلام الأكواد ومتابعة حالة الطلبات
       const [showReport, setShowReport] = useState(false);
       const [reportPhone, setReportPhone] = useState('');
       const [reportMsg, setReportMsg] = useState('');
@@ -99,10 +96,8 @@
       const [loading, setLoading] = useState(false);
 
       useEffect(() => {
-        // تسجيل الزائر
         db.from('visitors').insert([{ user_agent: navigator.userAgent }]).then(() => {});
 
-        // جلب المنتجات
         async function fetchProducts() {
           const { data } = await db.from('products').select('*');
           if (data) setProducts(data);
@@ -110,7 +105,6 @@
         fetchProducts();
       }, []);
 
-      // رفع الصورة
       async function uploadImage(file) {
         if (!file) return null;
         const fileExt = file.name.split('.').pop();
@@ -138,15 +132,10 @@
           player_id: isCodeService ? `${GAMES.find(g => g.id === selectedGame)?.name} (تسليم كود)` : playerId,
           payment_method: paymentMethod === 'transfer' ? 'تحويل رصيد ليبيانا' : 'كتابة الكرت',
           receipt_url: imgUrl,
-          status: 'pending'
+          status: 'pending',
+          sender_phone: senderPhone,
+          card_code: paymentMethod === 'card' ? cardCode : null
         };
-
-        if (paymentMethod === 'transfer') {
-          order.sender_phone = senderPhone;
-        } else {
-          order.card_code = cardCode;
-          order.sender_phone = senderPhone;
-        }
 
         const { error } = await db.from('orders').insert([order]);
         setLoading(false);
@@ -154,7 +143,7 @@
         if (error) {
           alert('حدث خطأ في الإرسال: ' + error.message);
         } else {
-          alert('تم إرسال الطلب بنجاح! يمكنك متابعة حالته في أي وقت بزيارة زر "متابعة حالة الطلب".');
+          alert('تم إرسال الطلب بنجاح! يمكنك متابعة حالته في أي وقت.');
           setSelectedOffer(null);
           setPlayerId('');
           setSenderPhone('');
@@ -180,7 +169,7 @@
       async function handleCheckCode(e) {
         e.preventDefault();
         setLoading(true);
-        const { data, error } = await db.from('orders').select('*').eq('sender_phone', searchPhone).not('digital_code', 'is', null);
+        const { data } = await db.from('orders').select('*').eq('sender_phone', searchPhone).not('digital_code', 'is', null);
         setLoading(false);
         if (data && data.length > 0) {
           setRetrievedCode(data);
@@ -192,7 +181,7 @@
       async function handleCheckOrderStatus(e) {
         e.preventDefault();
         setLoading(true);
-        const { data, error } = await db.from('orders')
+        const { data } = await db.from('orders')
           .select('*')
           .or(`sender_phone.eq.${statusQuery},player_id.eq.${statusQuery}`)
           .order('created_at', { ascending: false });
@@ -207,7 +196,6 @@
         }
       }
 
-      // دالة مساعدة لتصفية المنتجات حسب اللعبة أو الخدمة المختارة
       function getFilteredProducts() {
         if (!selectedGame) return [];
         return products.filter(p => {
@@ -222,7 +210,6 @@
         });
       }
 
-      // العروض الافتراضية الثابتة في حال لم تكن مسجلة في قاعدة البيانات أو لضمان ظهورها فوراً
       function getStaticOffers() {
         if (selectedGame === 'usdt') {
           return [
@@ -255,7 +242,6 @@
 
       return (
         <div style={{ padding: '15px', maxWidth: '500px', margin: '0 auto', backgroundColor: 'rgba(15, 23, 42, 0.85)', minHeight: '100vh', borderRadius: '12px' }}>
-          {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '15px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <img src="https://alphhjktqdoubsaxjrgm.supabase.co/storage/v1/object/public/receipts/IMG_6547.png" alt="Line Mazd Logo" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '50%' }} />
@@ -268,7 +254,6 @@
             </a>
           </div>
 
-          {/* أزرار الخدمات العلويّة */}
           <div style={{ display: 'flex', gap: '8px', marginTop: '15px', flexWrap: 'wrap' }}>
             <button onClick={() => setShowOrderStatus(true)} style={{ flex: '1 1 100%', backgroundColor: '#f59e0b', color: '#000', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
               🔍 متابعة حالة الطلب
@@ -281,7 +266,6 @@
             </button>
           </div>
 
-          {/* اختيار الألعاب والخدمات */}
           {!selectedGame && (
             <div>
               <h3 style={{ marginTop: '20px' }}>اختر اللعبة أو الخدمة:</h3>
@@ -296,7 +280,6 @@
             </div>
           )}
 
-          {/* عرض باقات اللعبة أو الخدمة المختارة */}
           {selectedGame && (
             <div>
               <button onClick={() => setSelectedGame(null)} style={{ backgroundColor: '#334155', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', margin: '15px 0', cursor: 'pointer' }}>
@@ -331,7 +314,6 @@
             </div>
           )}
 
-          {/* نافذة البيانات وإتمام الدفع */}
           {selectedOffer && (
             <div className="modal">
               <div className="modal-content">
@@ -382,12 +364,11 @@
             </div>
           )}
 
-          {/* نافذة الاستعلام عن حالة الطلب */}
           {showOrderStatus && (
             <div className="modal">
               <div className="modal-content">
                 <h3 style={{ color: '#f59e0b', marginTop: 0 }}>🔍 متابعة حالة الطلب</h3>
-                <p style={{ fontSize: '12px', color: '#94a3b8' }}>أدخل رقم الهاتف أو الآيدي (Player ID) الذي استخدمته للبحث عن حالة الطلب:</p>
+                <p style={{ fontSize: '12px', color: '#94a3b8' }}>أدخل رقم الهاتف أو الآيدي (Player ID) للبحث عن حالة الطلب:</p>
                 <form onSubmit={handleCheckOrderStatus}>
                   <input required value={statusQuery} onChange={e => setStatusQuery(e.target.value)} placeholder="رقم الهاتف أو الآيدي" />
                   <button type="submit" disabled={loading} style={{ width: '100%', backgroundColor: '#f59e0b', color: '#000', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold' }}>
@@ -406,6 +387,7 @@
                           {(!item.status || item.status === 'pending') && <span className="badge status-pending">قيد الانتظار ⏳</span>}
                         </div>
                         <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#94a3b8' }}>الآيدي: {item.player_id}</p>
+                        {item.card_code && <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#38bdf8' }}>رقم الكرت: {item.card_code}</p>}
                         {item.digital_code && (
                           <div style={{ marginTop: '8px', padding: '6px', backgroundColor: '#1e293b', borderRadius: '4px', border: '1px solid #16a34a' }}>
                             <p style={{ margin: 0, fontSize: '13px', color: '#22c55e', fontWeight: 'bold' }}>الكود الخاص بك: {item.digital_code}</p>
@@ -421,14 +403,12 @@
             </div>
           )}
 
-          {/* نافذة استلام الكود (الأكواد الرقمية) */}
           {showCheckCode && (
             <div className="modal">
               <div className="modal-content">
                 <h3>🔑 استلام الأكواد المشترَاة</h3>
-                <p style={{ fontSize: '12px', color: '#94a3b8' }}>أدخل رقم هاتفك الذي استخدمته أثناء التحويل لاستلام الكود المجهز من الأدمن:</p>
                 <form onSubmit={handleCheckCode}>
-                  <input required value={searchPhone} onChange={e => setSearchPhone(e.target.value)} placeholder="أدخل رقم المحول (09XXXXXXXX)" />
+                  <input required value={searchPhone} onChange={e => setSearchPhone(e.target.value)} placeholder="أدخل رقم الهاتف (09XXXXXXXX)" />
                   <button type="submit" disabled={loading} style={{ width: '100%', backgroundColor: '#0284c7', color: '#fff', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold' }}>
                     بحث عن الكود
                   </button>
@@ -450,14 +430,13 @@
             </div>
           )}
 
-          {/* نافذة البلاغات */}
           {showReport && (
             <div className="modal">
               <div className="modal-content">
                 <h3 style={{ color: '#ef4444' }}>⚠️ تقديم بلاغ / شكوى</h3>
                 <form onSubmit={handleReport}>
                   <label>رقم التواصل:</label>
-                  <input required value={reportPhone} onChange={e => reportPhone} onInput={e => setReportPhone(e.target.value)} placeholder="09XXXXXXXX" />
+                  <input required value={reportPhone} onChange={e => setReportPhone(e.target.value)} placeholder="09XXXXXXXX" />
                   <label>نص المشكلة:</label>
                   <textarea required value={reportMsg} onChange={e => setReportMsg(e.target.value)} placeholder="اكتب تفاصيل البلاغ..." style={{ height: '80px' }} />
                   <div style={{ display: 'flex', gap: '10px' }}>
